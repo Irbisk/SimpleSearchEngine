@@ -1,0 +1,339 @@
+type: edu
+custom_name: stage5
+files:
+- name: src/search/Main.java
+  visible: true
+  text: |
+    package search;
+
+    public class Main {
+        public static void main(String[] args) {
+            System.out.println("Hello World!");
+        }
+    }
+  learner_created: false
+- name: test/SearchEngineTests.java
+  visible: false
+  text: |
+    public class SearchEngineTests {
+        public static final String NAMES =
+            "Kristofer Galley\n" +
+            "Fernando Marbury fernando_marbury@gmail.com\n" +
+            "Kristyn Nix nix-kris@gmail.com\n" +
+            "Regenia Enderle\n" +
+            "Malena Gray\n" +
+            "Colette Mattei\n" +
+            "Wendolyn Mcphillips\n" +
+            "Jim Gray\n" +
+            "Coreen Beckham\n" +
+            "Bob Yeh bobyeah@gmail.com\n" +
+            "Shannan Bob stropeshah@gmail.com\n" +
+            "Yer Fillion\n" +
+            "Margene Resendez marres@gmail.com\n" +
+            "Blossom Ambler\n" +
+            "Teri Ledet teri_ledet@gmail.com\n" +
+            "Dana Baron baron@gmail.com\n" +
+            "Abram Goldsberry\n" +
+            "Yer Leopold\n" +
+            "Stefania Trunzo\n" +
+            "Alexis Leopold\n" +
+            "Carlene Bob\n" +
+            "Oliver Dacruz\n" +
+            "Jonie Richter\n" +
+            "Pasquale Gallien gallien@evilcorp.com\n" +
+            "Verdie Gentle\n" +
+            "Gerardo Strouth gallien@evilcorp.com\n" +
+            "Agripina Bob\n" +
+            "Latricia Niebuhr\n" +
+            "Malena Schommer\n" +
+            "Drema Leopold\n" +
+            "Heide Payeur\n" +
+            "Ranae Digiovanni\n" +
+            "Simona Pereira\n" +
+            "Nick Digiovanni\n" +
+            "Angelita Wigington gallien@evilcorp.com\n" +
+            "Elin Gray\n" +
+            "Dwain Trunzo\n" +
+            "Boris Beiler\n" +
+            "Remi Malek fsociefy@gmail.com\n" +
+            "Demetria Hostetler gallien@evilcorp.com\n" +
+            "Nydia Mcduffie\n" +
+            "Florencio Defibaugh\n" +
+            "Warner Giblin\n" +
+            "Bob Mans\n" +
+            "Shu Gray\n" +
+            "Kaycee Gray\n" +
+            "Victorina Froehlich victory@gmail.com\n" +
+            "Roseanne Gray\n" +
+            "Erica Radford hisam@gmail.com\n" +
+            "Elyse Pauling";
+    }
+  learner_created: false
+- name: test/SimpleSearchEngineTest.java
+  visible: false
+  text: |+
+    import org.hyperskill.hstest.testcase.TestCase;
+    import org.hyperskill.hstest.stage.StageTest;
+    import org.hyperskill.hstest.testcase.CheckResult;
+
+    import java.util.*;
+
+    class TestClue {
+        String input;
+
+        TestClue(String input) {
+            this.input = input;
+        }
+    }
+
+    public class SimpleSearchEngineTest extends StageTest<TestClue> {
+
+        public static final String test1 =
+            "2\n" +
+            "0";
+
+        public static final String test2 =
+            "1\n" +
+            "qwerty\n" +
+            "0";
+
+        public static final String test3 =
+            "1\n" +
+            "Leopold\n" +
+            "0";
+
+        public static final String test4 =
+            "3\n" +
+            "1\n" +
+            "Bob\n" +
+            "2\n" +
+            "2\n" +
+            "1\n" +
+            "Leopold\n" +
+            "0";
+
+        public static final String test5 =
+            "1\n" +
+            "@\n" +
+            "1\n" +
+            "Leopold\n" +
+            "0";
+
+        public static final String test6 =
+            "0";
+
+        public static final String test7 =
+            "1\n" +
+            "this text never find some match\n" +
+            "0";
+
+        public static final String test8 =
+            "1\n" +
+            "h\n" +
+            "1\n" +
+            "gallien@evilcorp.com\n" +
+            "0";
+
+        public static final String test9 =
+            "4\n" +
+            "2\n" +
+            "2\n" +
+            "1\n" +
+            "this text never gonna be matched\n" +
+            "1\n" +
+            "h\n" +
+            "1\n" +
+            "gallien@evilcorp.com\n" +
+            "0";
+
+        @Override
+        public List<TestCase<TestClue>> generate() {
+
+            List<TestCase<TestClue>> tests = new ArrayList<>();
+
+            for (String input : new String[]{
+                test1, test2, test3, test4, test5, test6, test7, test8, test9}) {
+
+                tests.add(new TestCase<TestClue>()
+                    .setAttach(new TestClue(input))
+                    .setInput(input)
+                    .addArguments("--data", "names.txt")
+                    .addFile("names.txt", SearchEngineTests.NAMES));
+            }
+
+            return tests;
+        }
+
+        @Override
+        public CheckResult check(String reply, TestClue clue) {
+            String cR = "\n";
+            List<String> outputLines = new LinkedList<String>(Arrays.asList(reply.split(cR)));
+            String[] inputLines = clue.input.split(cR);
+            String[] reference;
+            String[] currentSearchResult;
+
+            reference = SearchEngineTests.NAMES.split("\n");
+
+            //clear the list of unnecessary lines, if any
+            List<String> cleanedOutput = new ArrayList<String>();
+            for (int i = 0; i < outputLines.size(); i++) {
+                if (containsItemFromList(outputLines.get(i), reference)) {
+                    cleanedOutput.add(outputLines.get(i).toLowerCase());
+                }
+            }
+
+            int currentInputLine = 0;
+            int currentOutputLine = 0;
+
+            int actionType = -1;
+
+            while (actionType != 0) {
+                try {
+                    actionType = Integer.parseInt(inputLines[currentInputLine]);
+                } catch (NumberFormatException e) {
+                    return new CheckResult(false,
+                        "The number of menu item must be number!");
+                }
+
+                switch (actionType) {
+                    case 1:
+                        currentInputLine++;
+
+                        String toSearch = inputLines[currentInputLine].trim().toLowerCase();
+
+                        currentInputLine++;
+
+                        List<String> intendedResult = new ArrayList<>();
+
+                        for (String s : reference) {
+                            s = s.toLowerCase();
+                            if (s.contains(" " + toSearch + " ")
+                                || s.startsWith(toSearch + " ")
+                                || s.endsWith(" " + toSearch)) {
+
+                                intendedResult.add(s);
+                            }
+                        }
+
+
+
+                        currentSearchResult = new String[intendedResult.size()];
+                        for (int i = 0; i < intendedResult.size(); i++) {
+                            try {
+                                currentSearchResult[i] = cleanedOutput.get(currentOutputLine++);
+                            } catch (IndexOutOfBoundsException e) {
+                                return new CheckResult(false,
+                                    "Seems like you output less than expected. " +
+                                        "Either you've lost someone in the printing of all " +
+                                        "people, or you haven't printed all the necessary " +
+                                        "people in the search.");
+                            }
+                        }
+
+                        String[] correctOutput = intendedResult.toArray(String[]::new);
+
+                        Arrays.sort(correctOutput);
+                        Arrays.sort(currentSearchResult);
+
+                        if (!Arrays.equals(correctOutput, currentSearchResult)) {
+                            return new CheckResult(false,
+                                "Search result is not equal " +
+                                    "to the expected search");
+                        }
+                        break;
+                    case 2:
+                        currentInputLine++;
+
+                        List<String> intendedResultAll = new ArrayList<>();
+
+                        for (String s : reference) {
+                            s = s.toLowerCase();
+                            intendedResultAll.add(s);
+                        }
+
+                        String[] userResultAll = new String[intendedResultAll.size()];
+                        for (int i = 0; i < intendedResultAll.size(); i++) {
+                            try {
+                                userResultAll[i] = cleanedOutput.get(currentOutputLine++);
+                            } catch (IndexOutOfBoundsException e) {
+                                return new CheckResult(false,
+                                    "Seems like you output less than expected. " +
+                                        "Either you've lost someone in the printing of all " +
+                                        "people, or you haven't printed all the necessary " +
+                                        "people in the search.");
+                            }
+                        }
+
+                        String[] correctOutputAll = intendedResultAll.toArray(String[]::new);
+
+                        Arrays.sort(correctOutputAll);
+                        Arrays.sort(userResultAll);
+
+                        if (!Arrays.equals(correctOutputAll, userResultAll)) {
+                            return new CheckResult(false,
+                                "Looks like you're printing " +
+                                    "unknown people when you enter option 2.");
+                        }
+                        break;
+                    case 0:
+                        return CheckResult.correct();
+                    default:
+                        currentInputLine++;
+                        break;
+                }
+            }
+
+            return CheckResult.correct();
+        }
+
+        private static boolean containsItemFromList(String inputStr, String[] items) {
+            return Arrays.stream(items).parallel().anyMatch(inputStr::contains);
+        }
+    }
+
+  learner_created: false
+- name: src/search/Action.java
+  visible: true
+  text: "package search;\n\nimport java.io.File;\nimport java.io.FileNotFoundException;\n\
+    import java.io.FileReader;\nimport java.util.ArrayList;\nimport java.util.LinkedList;\n\
+    import java.util.List;\nimport java.util.Scanner;\n\npublic class Action {\n \
+    \   Scanner scanner = new Scanner(System.in);\n    private List<String> listALL\
+    \ = new LinkedList<>();\n    private List<String> listFound = new LinkedList<>();\n\
+    \n\n\n    public void start() {\n        System.out.println(\"Enter the number\
+    \ of people: \");\n        int n = scanner.nextInt();\n        scanner.nextLine();\n\
+    \        System.out.println(\"Enter all people:\");\n        for (int i = 0; i\
+    \ < n; i++) {\n            listALL.add(scanner.nextLine());\n        }\n     \
+    \   menu();\n    }\n\n    public void start(String fileName) {\n        File file\
+    \ = new File(fileName);\n        try {\n            Scanner fileScanner = new\
+    \ Scanner(file);\n            while (fileScanner.hasNextLine()) {\n          \
+    \      listALL.add(fileScanner.nextLine());\n            }\n            fileScanner.close();\n\
+    \            menu();\n        } catch (FileNotFoundException e) {\n          \
+    \  e.printStackTrace();\n        }\n    }\n\n    public void menu() {\n      \
+    \  while (true) {\n            System.out.println(\"\\n=== Menu ===\\n1. Find\
+    \ a person\\n2. Print all people\\n0. Exit\");\n            String option = scanner.nextLine();\n\
+    \            switch (option) {\n                case \"1\":\n                \
+    \    findAPerson();\n                    break;\n                case \"2\":\n\
+    \                    printAllPeople();\n                    break;\n         \
+    \       case \"0\":\n                    exit();\n                    return;\n\
+    \                default:\n                    System.out.println(\"\\nIncorrect\
+    \ option! Try again.\");\n            }\n        }\n    }\n\n    private void\
+    \ findAPerson() {\n        System.out.println(\"\\nEnter a name or email to search\
+    \ all suitable people.\");\n        String name = scanner.nextLine();\n      \
+    \  checkList(name);\n    }\n\n    private void printAllPeople() {\n        System.out.println(\"\
+    === List of people ===\");\n        for (String s: listALL) {\n            System.out.println(s);\n\
+    \        }\n    }\n\n    private void exit() {\n        System.out.println(\"\
+    Bye!\");\n    }\n\n    private void checkList(String name) {\n        boolean\
+    \ found = false;\n        listFound.clear();\n        for (String s: listALL)\
+    \ {\n            if (s.toLowerCase().contains(name.toLowerCase())) {\n       \
+    \         listFound.add(s);\n                found = true;\n            }\n  \
+    \      }\n        if (found) {\n            for (String s: listFound) {\n    \
+    \            System.out.println(s);\n            }\n        } else {\n       \
+    \     System.out.println(\"No matching people found\");\n        }\n    }\n  \
+    \  \n}\n"
+  learner_created: true
+feedback_link: https://hyperskill.org/learn/step/5500#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sat, 15 Jan 2022 13:10:09 UTC
+record: 5
